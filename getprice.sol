@@ -32,8 +32,6 @@ contract Automaticaly {
     }
 }
 
-
-
 contract GetPrice is Automaticaly {
     
     function getBTC(uint i) public view returns(int){
@@ -57,6 +55,3 @@ contract GetPrice is Automaticaly {
 
 
 }
-
-
-
