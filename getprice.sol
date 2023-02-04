@@ -32,6 +32,9 @@ contract Automaticaly {
     }
 }
 
+
+
+
 contract GetPrice is Automaticaly {
     
     function getBTC(uint i) public view returns(int){
@@ -44,7 +47,7 @@ contract GetPrice is Automaticaly {
     }
 
     function gettime(uint i) public view returns(uint80){
-        if(i == 0){
+     w   if(i == 0){
             return(time[n]);}
         else{
             return(time[i]);   
