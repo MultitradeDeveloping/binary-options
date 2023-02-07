@@ -47,7 +47,7 @@ contract GetPrice is Automaticaly {
     }
 
     function gettime(uint i) public view returns(uint80){
-     w   if(i == 0){
+        if(i == 0){
             return(time[n]);}
         else{
             return(time[i]);   
