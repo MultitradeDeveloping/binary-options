@@ -18,7 +18,6 @@ function limitbid(uint coef) public payable{
     }    
 }
 
-
 function limitask(uint coef) public payable{
     id++;
     oiasks = oiasks + msg.value;
