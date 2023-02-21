@@ -31,6 +31,5 @@ else{
         addr.transfer(val*(coef/1000+1)*(100-fee)/100);
     }
 }
-
 }
 }
