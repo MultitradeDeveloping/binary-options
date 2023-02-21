@@ -1,6 +1,6 @@
 // import "./strings.sol";
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.0;
 
 import  "./contract.sol"; 
 import "./orderbase.sol"; 
@@ -9,6 +9,7 @@ contract orderSystem is orderbase{
 
 function limitbid(uint coef) public payable{
     id++;
+    oibids = oibids + msg.value;
     idBase[id] = msg.sender; 
     bidIds[id] = coef;
     bidMain[coef][id] = msg.value;
@@ -20,6 +21,7 @@ function limitbid(uint coef) public payable{
 
 function limitask(uint coef) public payable{
     id++;
+    oiasks = oiasks + msg.value;
     idBase[id] = msg.sender; 
     askIds[id] = coef;
     askMain[coef][id] = msg.value;
@@ -33,6 +35,8 @@ function limitask(uint coef) public payable{
 
 
 function marketAsk() public payable{
+    require(msg.value<=oibids, "Your order is more than supply in orderbook. Be careful to avoid squeeze");
+    oibids = oibids - msg.value;
     id++;
     idBase[id] = msg.sender; 
     uint f = 0;
@@ -77,6 +81,8 @@ function marketAsk() public payable{
 
 
 function marketbid() public payable{
+    require(msg.value<=oiasks, "Your order is more than supply in orderbook. Be careful to avoid squeeze");
+    oiasks = oiasks - msg.value;
     id++;
     idBase[id] = msg.sender; 
     uint f = 0;
