@@ -28,7 +28,7 @@ contract Automaticaly {
         ) = BTCpriceFeed.latestRoundData();
         n++;
         BTCUSD = uint(price);
-        time = roundID;
+        time = timeStamp;
         // time[n] = uint80(startedAt);
     }
 }
