@@ -18,7 +18,7 @@ contract Automaticaly {
         ETHpriceFeed = AggregatorV3Interface(0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e);
         LinkpriceFeed = AggregatorV3Interface(0x48731cF7e84dc94C5f84577882c14Be11a5B7456);
     }
-    function LatestBTCprice() public{
+    function LatestBTCprice() internal{
         (
             uint80 roundID,
             int price,
