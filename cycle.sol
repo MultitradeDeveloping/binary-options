@@ -31,9 +31,12 @@ contract cycle is takeprofit{
     id = 0;
     }
     
-    function screen() internal{
+function screen() public{
+        uint t = block.timestamp;
+        uint treq = t%86400;
+        require(treq<30);
         uint last = BTCUSD;
-        LatestBTCprice();
+        LatestBTCprice(); //from getprice.sol 
         if(BTCUSD>last){
             take(true);   
         }
@@ -43,5 +46,3 @@ contract cycle is takeprofit{
         clean();
 
     }
-
-}
