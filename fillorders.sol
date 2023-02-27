@@ -8,9 +8,12 @@ import "./orderbase.sol";
 contract orderSystem is orderbase{
 
 function limitbid(uint coef) public payable{
+    uint t = block.timestamp;
+    uint treq = t%86400;
+    require(treq>30);
     id++;
     oibids = oibids + msg.value;
-    idBase[id] = msg.sender; 
+    idBase[id] = msg.sender;
     bidIds[id] = coef;
     bidMain[coef][id] = msg.value;
     if(highestBid < coef){
@@ -18,7 +21,11 @@ function limitbid(uint coef) public payable{
     }    
 }
 
+
 function limitask(uint coef) public payable{
+    uint t = block.timestamp;
+    uint treq = t%86400;
+    require(treq>30);
     id++;
     oiasks = oiasks + msg.value;
     idBase[id] = msg.sender; 
@@ -31,7 +38,6 @@ function limitask(uint coef) public payable{
         lowestAsk = coef;
     }
 }
-
 
 function marketAsk() public payable{
     require(msg.value<=oibids, "Your order is more than supply in orderbook. Be careful to avoid squeeze");
