@@ -124,4 +124,29 @@ function marketbid() public payable{
 
     }
     }
+    
+    
+    function cancelBid(uint value, uint coef) public {
+    uint i = 0;
+    address payable addr;
+    while(addr != msg.sender){
+        i++;
+        addr = payable(idBase[i]);
+    }
+    uint val = bidMain[i][coef];
+    require(val>=value);
+    addr.transfer(value);
+    }
+
+    function cancelAsk(uint value, uint coef) public {
+    uint i = 0;
+    address payable addr;
+    while(addr != msg.sender){
+        i++;
+        addr = payable(idBase[i]);
+    }
+    uint val = askMain[i][coef];
+    require(val>=value);
+    addr.transfer(value);
+    }
 }
