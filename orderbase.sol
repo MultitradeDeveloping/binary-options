@@ -1,7 +1,6 @@
 // import "./strings.sol";
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-
 import  "./getprice.sol"; 
 
 contract orderbase is GetPrice{
