@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import  "./contract.sol"; 
+import  "./getprice.sol"; 
 
 contract orderbase is GetPrice{
     //due to the lack of numbers with a dot, all coefficients are stored multiplied by 1000
@@ -12,6 +12,7 @@ contract orderbase is GetPrice{
     uint id;
     uint oibids;
     uint oiasks;
+    uint period = 300;
 
     //id to address
     mapping(uint => address) idBase;
@@ -21,37 +22,40 @@ contract orderbase is GetPrice{
     mapping(uint => uint) bidIds;
 
     //Opened orders
-    //coef => id => value
-    mapping(uint => mapping(uint => uint)) askMain;
-    mapping(uint => mapping(uint => uint)) bidMain;
+    //game num => coef => id => value
+    mapping(uint => mapping(uint => mapping(uint => uint))) askMain;
+    mapping(uint => mapping(uint => mapping(uint => uint))) bidMain;
 
 
-    function getHighestBid() public view returns(uint, uint){
+    function getHighestBid(uint x) public view returns(uint, uint){
         uint c;
+        if(x == 0){x = n;}
         for(uint a; a != id+1; a+=1){
-            c = c + bidMain[highestBid][a];
+            c = c + bidMain[x][highestBid][a];
         }
         return(highestBid, c);
     }
 
 
-    function getLowestAsk() public view returns(uint coef, uint value){    
+    function getLowestAsk(uint x) public view returns(uint coef, uint value){    
         uint c;
+        if(x == 0){x = n;}
         for(uint a; a != id+1; a+=1){
-            c = c + askMain[lowestAsk][a];
+            c = c + askMain[x][lowestAsk][a];
         }
         return(lowestAsk, c); 
     }
 
 
 
-    function renewHighestBids() internal{
+    function renewHighestBids(uint x) internal{
         uint i = 0;
         uint cf; 
+        if(x == 0){x = n;}
         while(i != id){
             i++;
             uint loc = bidIds[i];
-            if(bidMain[loc][i] != 0){
+            if(bidMain[x][loc][i] != 0){
                 if(cf == 0){
                     cf = loc;
                 }
@@ -64,13 +68,14 @@ contract orderbase is GetPrice{
     }
     
 
-    function renewLowestAsk() internal{
+    function renewLowestAsk(uint x) internal{
         uint i = 0;
-        uint cf; 
+        uint cf;
+        if(x == 0){x = n;} 
         while(i != id){
             i++;
             uint loc = askIds[i];
-            if(askMain[loc][i] != 0){
+            if(askMain[x][loc][i] != 0){
                 if(cf == 0){
                     cf = loc;
                 }
