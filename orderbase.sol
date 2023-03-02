@@ -12,7 +12,7 @@ contract orderbase is GetPrice{
     uint id;
     uint oibids;
     uint oiasks;
-    uint period = 300;
+    uint period = 86400;
 
     //id to address
     mapping(uint => address) idBase;
