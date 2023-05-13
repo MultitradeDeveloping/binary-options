@@ -1,49 +1,95 @@
 // import "./strings.sol";
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+import  "./getprice.sol"; 
 
-import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+contract orderbase is GetPrice{
+    //due to the lack of numbers with a dot, all coefficients are stored multiplied by 1000
+    
+    uint public highestBid;
+    uint public lowestAsk;
+    uint public id;
+    uint public oibids;
+    uint public oiasks;
+    uint period = 60;
+
+    //id to address
+    mapping(uint => address) idBase;
+
+    //id => coef
+    mapping(uint => uint) askIds;
+    mapping(uint => uint) bidIds;
+
+    //Opened orders
+    //game num => coef => id => value
+    mapping(uint => mapping(uint => mapping(uint => uint))) askMain;
+    mapping(uint => mapping(uint => mapping(uint => uint))) bidMain;
 
 
-contract Automaticaly {
-    AggregatorV3Interface internal BTCpriceFeed;
-    AggregatorV3Interface internal ETHpriceFeed;
-    AggregatorV3Interface internal LinkpriceFeed;
-    uint public n = 0;
-    uint public BTCUSD;
-    uint time;
-    AggregatorV3Interface internal priceFeed;
-
-
-    constructor() {
-        priceFeed = AggregatorV3Interface(
-            0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43
-        );
+    function getHighestBid(uint volume) public view returns(uint, uint){
+        
+        uint c;
+        if(volume == 0){volume = n;}
+        for(uint a; a != id+1; a+=1){
+            c = c + bidMain[volume][highestBid][a];
+        }
+        return(highestBid, c);
     }
-    /**
-    * Returns the latest price
-    */
-    function getLatestPrice() internal {
-        // prettier-ignore
-        (
-            /* uint80 roundID */,
-            int price,
-            /*uint startedAt*/,
-            /*uint timeStamp*/,
-            /*uint80 answeredInRound*/
-        ) = priceFeed.latestRoundData();
-        BTCUSD = uint(price);
-    }
-}
 
+
+    function getLowestAsk(uint volume) public view returns(uint coef, uint value){    
+        
+        uint c;
+        if(volume == 0){volume = n;}
+        for(uint a; a != id+1; a+=1){
+            c = c + askMain[volume][lowestAsk][a];
+        }
+        return(lowestAsk, c); 
+    }
+
+
+
+    function renewHighestBids(uint volume) internal{
+        uint i = 0;
+        uint cf; 
+        if(volume == 0){volume = n;}
+        while(i != id){
+            i = i+1;
+            uint loc = bidIds[i];
+            if(bidMain[volume][loc][i] != 0){
+                if(cf == 0){
+                    cf = loc;
+                }
+                if(loc>cf){
+                    cf = loc;
+                }
+            }
+        }
+        highestBid = cf;
+    }
     
 
+    function renewLowestAsk(uint volume) internal{
+        uint i = 0;
+        uint cf;
+        if(volume == 0){volume = n;} 
+        while(i != id){
+            i = i+1;
+            uint loc = askIds[i];
+            if(askMain[volume][loc][i] != 0){
+                if(cf == 0){
+                    cf = loc;
+                }
+                if(loc<cf){
+                    cf = loc;
+                }
+            }
+        }
+        lowestAsk = cf;
+    }
 
-
-contract GetPrice is Automaticaly {
-    function gettime() public view returns(uint){
-        return(time);
-}
-
+//filled orders
+//id => coef => value
+mapping(uint => mapping(uint => uint)) filledBids;
+mapping(uint => mapping(uint => uint)) filledAsks;
 }
