@@ -4,11 +4,13 @@ import "./takeprofit.sol";
 pragma solidity ^0.8.0;
 
 
-contract cycle is takeprofit{    
-    function clean() internal{
-    uint a;
-    while(a<id){
-        a++;
+contract cycle is takeprofit{   
+    address public owner = msg.sender;
+
+    function clean() public {
+    uint a ;
+    while(a<=id){
+        a = a+1;
         if(askMain[n][a][askIds[a]] != 0){
             address payable addr = payable(idBase[a]);
             addr.transfer(askMain[n][a][askIds[a]]);
@@ -18,8 +20,8 @@ contract cycle is takeprofit{
             addr.transfer(bidMain[n][a][bidIds[a]]);
         }
         idBase[a] = 0x0000000000000000000000000000000000000000;        
-        askMain[n][a][askIds[a]] = 0;
-        bidMain[n][a][bidIds[a]] = 0;
+        askMain[n][askIds[a]][id] = 0;
+        bidMain[n][bidIds[a]][id] = 0;
         filledAsks[askIds[a]][a] = 0;
         filledBids[bidIds[a]][a] = 0;
         askIds[a] = 0;
@@ -28,15 +30,26 @@ contract cycle is takeprofit{
     highestBid = 0;
     lowestAsk = 0;
     id = 0;
-    n++;
+    n = n+1;
+    feeManagement();
     }
     
+
+
+    function feeManagement() internal{
+        if(n%10==0){
+            address payable _owner = payable(owner);
+            _owner.transfer(address(this).balance);
+        }
+        
+    }
+
     function screen() public{
         uint t = block.timestamp;
         uint treq = t%period;
-        require(treq<60);
+        require(treq<60, "reverted by time requirement");
         uint last = BTCUSD;
-        LatestBTCprice(); //from getprice.sol 
+        // getLatestPrice(); //from getprice.sol 
         if(BTCUSD>last){
             take(true);   
         }
@@ -44,7 +57,6 @@ contract cycle is takeprofit{
             take(false);
         }
         clean();
-
     }
 
 }
