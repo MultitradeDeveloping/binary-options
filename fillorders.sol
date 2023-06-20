@@ -6,7 +6,7 @@ import "./orderbase.sol";
 
 contract orderSystem is orderbase{
 
-function limitBid(uint coef) public payable{
+function limitbid(uint coef) public payable{
     uint volume = msg.value ;
     if(volume  == 0){volume = n;}
     // uint t = block.timestamp;
@@ -20,7 +20,7 @@ function limitBid(uint coef) public payable{
     // xx = askMain[n][coef][id];
     if(highestBid < coef){
         highestBid = coef;
-    }   
+    }    
 }
 
 function limitask(uint coef) public payable{
@@ -35,7 +35,7 @@ function limitask(uint coef) public payable{
     askIds[id] = coef;
     askMain[n][coef][id] = msg.value;
     // xx = askMain[n][coef][id];
-    if(lowestAsk < coef){
+    if(lowestAsk > coef){
         lowestAsk = coef;
     }   
 }
@@ -67,7 +67,7 @@ function marketbid() public payable{
                 filledAsks[a][lowestAsk] = filledAsks[a][lowestAsk] + msg.value-f;
                 filledBids[id][lowestAsk] = msg.value;
                 f = f+loc; 
-                bidIds[id] = lowestAsk;
+                askIds[id] = lowestAsk;
             }
                
         }
@@ -106,7 +106,7 @@ function marketask() public payable{
                 filledBids[a][highestBid] = filledBids[a][highestBid] + msg.value-f;
                 filledAsks[id][highestBid] = msg.value;
                 f = f+loc; 
-                askIds[id] = highestBid;
+                bidIds[id] = highestBid;
             }
                
         }
