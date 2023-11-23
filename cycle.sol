@@ -12,21 +12,21 @@ contract cycle is takeprofit{
     uint a ;
     while(a<=id){
         a = a+1;
-        if(askMain[n][askIds[id]][a] != 0){
+        if(askValue[a] != 0){
             address payable addr = payable(idBase[a]);
-            addr.transfer(bidMain[n][askIds[id]][a]);
+            addr.transfer(askValue[a]);
         }
-        if(bidMain[n][bidIds[id]][a] != 0){
+        if(bidValue[a] != 0){
             address payable addr = payable(idBase[a]);
-            addr.transfer(bidMain[n][bidIds[id]][a]);
+            addr.transfer(bidValue[a]);
         }
         idBase[a] = 0x0000000000000000000000000000000000000000;        
-        askMain[n][askIds[a]][id] = 0;
-        bidMain[n][bidIds[a]][id] = 0;
-        filledAsks[a][askIds[a]] = 0;
-        filledBids[a][bidIds[a]] = 0;
-        askIds[a] = 0;
-        bidIds[a] = 0;
+        askValue[a] = 0;
+        bidValue[a] = 0;
+        askFilled[a] = 0;
+        bidFilled[a] = 0;
+        askCoefs[a] = 0;
+        bidCoefs[a] = 0;
         // test++;
     }
     highestBid = 0;
@@ -62,7 +62,12 @@ contract cycle is takeprofit{
         else{
             take(false);
         }
-        clean();
+        clean();    
     }
 
+
+    function test(bool up) public{
+        take(up);
+        clean();
+    }
 }
