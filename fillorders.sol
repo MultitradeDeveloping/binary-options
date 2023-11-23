@@ -7,145 +7,149 @@ import "./orderbase.sol";
 contract orderSystem is orderbase{
 
 function limitbid(uint coef) public payable{
+    id = id+1;
+    idBaseReversed[msg.sender].push(id);
     uint volume = msg.value ;
     if(volume  == 0){volume = n;}
     // uint t = block.timestamp;
     // uint treq = t%period;
     // require(treq>60);
-    id = id+1;
     oibids = oibids + (msg.value*coef/1000);
     idBase[id] = msg.sender;
-    bidIds[id] = coef;
-    bidMain[n][coef][id] = msg.value;
+    bidCoefs[id] = coef;
+    bidValue[id] = msg.value;
     // xx = askMain[n][coef][id];
     if(highestBid < coef){
         highestBid = coef;
     }    
+    
 }
 
 function limitask(uint coef) public payable{
+    id = id+1;
+    idBaseReversed[msg.sender].push(id);
     uint volume = msg.value ;
     if(volume  == 0){volume = n;}
     // uint t = block.timestamp;
     // uint treq = t%period;
     // require(treq>60);
-    id = id+1;
     oiasks = oiasks + (msg.value*coef/1000);
     idBase[id] = msg.sender;
-    askIds[id] = coef;
-    askMain[n][coef][id] = msg.value;
+    askCoefs[id] = coef;
+    askValue[id] = msg.value;
     // xx = askMain[n][coef][id];
     if(lowestAsk > coef){
         lowestAsk = coef;
     }   
+    
 }
 
 function marketbid() public payable{
     require(msg.value<=oiasks, "Your order is more than supply in orderbook. Be careful to avoid squeeze");
     oiasks = oiasks - msg.value;
     id = id+1;
+    idBaseReversed[msg.sender].push(id);
     idBase[id] = msg.sender; 
+    uint await;
     uint f = 0;
-    uint a;
+    uint locCoef;
+    bidValue[id] = msg.value;
     while(f<msg.value){
-        while(a<id){
-            a = a+1;
-            //loc > supply at 1 order 
-            uint loc = askMain[n][lowestAsk][a];
-            if(loc >= msg.value-f){
-                askMain[n][lowestAsk][a] = askMain[n][lowestAsk][a]-(msg.value-f);
-                bidIds[id] = lowestAsk;
-                filledBids[id][lowestAsk] = msg.value;
-                filledAsks[a][lowestAsk] = filledAsks[a][lowestAsk] + (msg.value-f);
-                f = msg.value;
+        renewLowestAsk(1);
+        uint a;
+        while(locCoef != lowestAsk){
+            locCoef = askCoefs[a+1];
+            a++;
+        }
+        
+        // if(locCoef == 0){locCoef = 1000;}
+        //coef for ask
+        uint fullvalue = (msg.value-f)*locCoef/1000;
 
+        //не разъедает
+        if(askValue[a]-askFilled[a] > (msg.value - f)/locCoef*1000){
+            bidFilled[id] = msg.value;
+            askFilled[a] = askFilled[a] + fullvalue;
+            // await = await + (msg.value - f)/locCoef*1000;
+            await = await + fullvalue;
+            f = msg.value;
             }
 
-            //loc <= supply at 1 order
-            else{
-                askMain[n][lowestAsk][a] = 0;
-                filledAsks[a][lowestAsk] = filledAsks[a][lowestAsk] + msg.value-f;
-                filledBids[id][lowestAsk] = msg.value;
-                f = f+loc; 
-                askIds[id] = lowestAsk;
-            }
-               
+        //разъедает
+        else{
+            askFilled[a] = askValue[a];
+            bidFilled[id]  = bidFilled[id] + (msg.value - f)/locCoef*1000;
+            // await = await + (msg.value - f)/locCoef*1000;
+            await = await + fullvalue;
+            f = f + fullvalue + (msg.value - f)/locCoef*1000;
         }
-        if(f<msg.value){
-        a = 0;
-        f = msg.value;
-        renewLowestAsk(msg.value);
-        }
+
+
     }
+    bidCoefs[id] = 1000*(await/msg.value);
+    
 }
 
 function marketask() public payable{
-	 require(msg.value<=oibids, "Your order is more than supply in orderbook. Be careful to avoid squeeze");
+    require(msg.value<=oibids, "Your order is more than supply in orderbook. Be careful to avoid squeeze");
     oibids = oibids - msg.value;
     id = id+1;
+    idBaseReversed[msg.sender].push(id);
     idBase[id] = msg.sender; 
+    uint await;
     uint f = 0;
-    uint a;
+    uint locCoef;
+    askValue[id] = msg.value;
     while(f<msg.value){
-        while(a<id){
-            a = a+1;
-            //loc > supply at 1 order 
-            uint loc = bidMain[n][highestBid][a];
-            if(loc >= msg.value-f){
-                bidMain[n][highestBid][a] = bidMain[n][highestBid][a]-(msg.value-f);
-                askIds[id] = highestBid;
-                filledAsks[id][highestBid] = msg.value;
-                filledBids[a][highestBid] = filledBids[a][highestBid] + (msg.value-f);
-                f = msg.value;
+        renewHighestBids(1);
+        uint a;
+        while(locCoef != highestBid){
+            locCoef = bidCoefs[a+1];
+            a++;
+        }
+        
+        // if(locCoef == 0){locCoef = 1000;}
+        //coef for ask
+        uint fullvalue = (msg.value-f)*locCoef/1000;
 
+        //не разъедает
+        if(bidValue[a]-bidFilled[a] > (msg.value - f)/locCoef*1000){
+            askFilled[id] = msg.value;
+            bidFilled[a] = bidFilled[a] + fullvalue;
+            // await = await + (msg.value - f)/locCoef*1000;
+            await = await + fullvalue;
+            f = msg.value;
             }
 
-            //loc <= supply at 1 order
-            else{
-                bidMain[n][highestBid][a] = 0;
-                filledBids[a][highestBid] = filledBids[a][highestBid] + msg.value-f;
-                filledAsks[id][highestBid] = msg.value;
-                f = f+loc; 
-                bidIds[id] = highestBid;
-            }
-               
+        //разъедает
+        else{
+            bidFilled[a] = bidValue[a];
+            askFilled[id]  = askFilled[id] + (msg.value - f)/locCoef*1000;
+            // await = await + (msg.value - f)/locCoef*1000;
+            await = await + fullvalue;
+            f = f + fullvalue + (msg.value - f)/locCoef*1000;
         }
-        if(f<msg.value){
-        a = 0;
-        f = msg.value;
-        renewHighestBids(msg.value);
-        }
+
+
     }
-	}
+    askCoefs[id] = 1000*(await/msg.value);
+    
+}
 	
 
 
 
 
 
-function cancelBid(uint value, uint coef, uint volume) public {
-uint i = 0;
-address payable addr;
-if(volume == 0){volume = n;}
-while(addr != msg.sender){
-    i = i+1;
-    addr = payable(idBase[i]);
-}
-uint val = bidMain[n][highestBid][id];
-require(val>=value);
-addr.transfer(value);
-}
+function cancelBid(uint id, uint volume) public {
+    require(bidValue[id] >= volume);
+    bidValue[id] = bidValue[id] - volume;
+    }
 
-function cancelask(uint value, uint coef, uint volume) public {
-uint i = 0;
-address payable addr;
-if(volume == 0){volume = n;}
-while(addr != msg.sender){
-    i = i+1;
-    addr = payable(idBase[i]);
-}
-uint val = askMain[n][highestBid][id];
-require(val>=value);
-addr.transfer(value);
+
+
+function cancelask(uint id,  uint volume) public {
+    require(askValue[id] >= volume);
+    askValue[id] = askValue[id] - volume;
 }
 }
