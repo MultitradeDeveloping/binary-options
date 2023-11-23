@@ -7,7 +7,7 @@ contract orderbase is GetPrice{
     //due to the lack of numbers with a dot, all coefficients are stored multiplied by 1000
     
     uint public highestBid;
-    uint public lowestAsk;
+    uint public lowestAsk = 10**9;
     uint public id;
     uint public oibids;
     uint public oiasks;
@@ -15,16 +15,45 @@ contract orderbase is GetPrice{
 
     //id to address
     mapping(uint => address) idBase;
+    mapping(address => uint[]) idBaseReversed;
 
-    //id => coefw
-    mapping(uint => uint) askIds;
-    mapping(uint => uint) bidIds;
+    //id => coef
+    mapping(uint => uint) askCoefs;
+    mapping(uint => uint) bidCoefs;
 
-    //Opened orders
-    //game num => coef => id => value
-    mapping(uint => mapping(uint => mapping(uint => uint))) askMain;
-    mapping(uint => mapping(uint => mapping(uint => uint))) bidMain;
+    //id => value
+    mapping(uint => uint) askValue;
+    mapping(uint => uint) bidValue;
 
+    //id => value filled
+    mapping(uint => uint) askFilled;
+    mapping(uint => uint) bidFilled;
+    
+
+    //to make tradelist
+    function getAddressOrdersNum(address address_) public view returns(uint ordersNum){
+        uint a = idBaseReversed[address_].length;
+        return(a);
+    }
+
+    function getIdsOfOrders(address address_, uint n) public view returns(uint idNum){
+        uint a = idBaseReversed[address_][n];
+        return(a);
+    }
+
+
+    //side LONG = 1, SHORT = 0
+    function getDataByID(uint n) public view returns(uint coef, uint side, uint value, uint filled){
+        uint valbids = bidValue[n];
+        uint valasks = askValue[n];    
+        if(valbids != 0){
+            return(bidCoefs[n], 1, valbids, bidFilled[n]);
+        }
+        else{
+            return(askCoefs[n], 0, valasks, askFilled[n]);
+        }
+
+    }
 
     function calculateAverageAskCoef(uint volume) public view returns(uint){
         if(volume > oiasks){return(0);}
@@ -39,15 +68,15 @@ contract orderbase is GetPrice{
                 uint LocalCoef = 65535;
                 while(i<=id){
                     i++;
-                    if(askIds[i] <= LocalCoef && askIds[i] > highestUsedCoef && askMain[n][askIds[i]][i] != 0){
-                        LocalCoef = askIds[i];
+                    if(askCoefs[i] <= LocalCoef && askCoefs[i] > highestUsedCoef && askFilled[i]-askValue[i] != 0){
+                        LocalCoef = askCoefs[i];
                         highestUsedCoef = LocalCoef;
                         localId = i;
                        }
 
                 }
                 
-                uint add = askMain[n][LocalCoef][localId]; 
+                uint add = askValue[i]; 
                 if(add <= volume-spend){ 
                     fill = fill+add;
                     spend = spend + (add*LocalCoef/1000);
@@ -77,15 +106,15 @@ contract orderbase is GetPrice{
                 uint LocalCoef;
                 while(i<=id){
                     i++;
-                    if(bidIds[i] >= LocalCoef && bidIds[i] > lowestUsedCoef && bidMain[n][bidIds[i]][i] != 0){
-                        LocalCoef = bidIds[i];
+                    if(bidCoefs[i] >= LocalCoef && bidCoefs[i] > lowestUsedCoef && bidFilled[i] - bidValue[i] != 0){
+                        LocalCoef = bidCoefs[i];
                         lowestUsedCoef = LocalCoef;
                         localId = i;
                        }
 
                 }
                 
-                uint add = bidMain[n][LocalCoef][localId]; 
+                uint add = bidValue[i]; 
                 if(add <= volume-spend){ 
                     fill = fill+add;
                     spend = spend + (add*LocalCoef/1000);
@@ -110,8 +139,8 @@ contract orderbase is GetPrice{
         if(volume == 0){volume = n;}
         while(i != id){
             i = i+1;
-            uint loc = bidIds[i];
-            if(bidMain[volume][loc][i] != 0){
+            uint loc = bidCoefs[i];
+            if(bidValue[i] != 0){
                 if(cf == 0){
                     cf = loc;
                 }
@@ -131,8 +160,8 @@ contract orderbase is GetPrice{
         if(volume == 0){volume = n;} 
         while(i != id){
             i = i+1;
-            uint loc = askIds[i];
-            if(askMain[volume][loc][i] != 0){
+            uint loc = askCoefs[i];
+            if(askValue[i] != 0){
                 if(cf == 0){
                     cf = loc;
                 }
@@ -146,8 +175,5 @@ contract orderbase is GetPrice{
         lowestAsk = cf;
     }
 
-//filled orders
-//id => coef => value
-mapping(uint => mapping(uint => uint)) filledBids;
-mapping(uint => mapping(uint => uint)) filledAsks;
+
 }
