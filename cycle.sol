@@ -20,6 +20,10 @@ contract cycle is takeprofit{
             address payable addr = payable(idBase[a]);
             addr.transfer(bidValue[a]);
         }
+        while(b<=idBaseReversed[idBase[a]].length){
+            idBaseReversed[idBase[a]] = 0x0000000000000000000000000000000000000000;
+            b++;
+        }
         idBase[a] = 0x0000000000000000000000000000000000000000;        
         askValue[a] = 0;
         bidValue[a] = 0;
