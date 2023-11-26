@@ -10,6 +10,7 @@ contract cycle is takeprofit{
 
     function clean() internal  {
     uint a ;
+    uint b;
     while(a<=id){
         a = a+1;
         if(askValue[a] != 0){
@@ -21,7 +22,7 @@ contract cycle is takeprofit{
             addr.transfer(bidValue[a]);
         }
         while(b<=idBaseReversed[idBase[a]].length){
-            idBaseReversed[idBase[a]] = 0x0000000000000000000000000000000000000000;
+            idBaseReversed[idBase[a]][b] = 0;
             b++;
         }
         idBase[a] = 0x0000000000000000000000000000000000000000;        
