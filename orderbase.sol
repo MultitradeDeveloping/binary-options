@@ -29,6 +29,70 @@ contract orderbase is GetPrice{
     mapping(uint => uint) askFilled;
     mapping(uint => uint) bidFilled;
     
+    uint[] public nearestAsks = [100000,100000];
+    uint[] public nearestBids;
+
+    function createAskOB(uint limit) public {
+    uint i;
+    uint len = nearestAsks.length;
+
+    if (limit < nearestAsks[len-1]) {
+        while (i != len) {
+            if (limit <= nearestAsks[i]) {
+                nearestAsks.push(0);
+                for (uint j = nearestAsks.length - 1; j > i; j--) {
+                    nearestAsks[j] = nearestAsks[j - 1];
+                }
+                nearestAsks[i] = limit;
+                break;
+            }
+            i = i + 1;
+        }
+    } else {
+        nearestAsks.push(0);  // Добавляем временный элемент в конец массива
+
+        for (i = len; i > 0 && limit < nearestAsks[i - 1]; i--) {
+            nearestAsks[i] = nearestAsks[i - 1];
+        }
+
+        nearestAsks[i] = limit;  // Вставляем новый элемент в нужное место
+
+        // Удаляем временный элемент
+        nearestAsks.pop();
+    }
+}
+
+    
+    function createBidOB(uint limit) public {
+    uint i;
+    uint len = nearestAsks.length;
+
+    if (limit < nearestAsks[len-1]) {
+        while (i != len) {
+            if (limit <= nearestAsks[i]) {
+                nearestAsks.push(0);
+                for (uint j = nearestAsks.length - 1; j > i; j--) {
+                    nearestAsks[j] = nearestAsks[j - 1];
+                }
+                nearestAsks[i] = limit;
+                break;
+            }
+            i = i + 1;
+        }
+    } else {
+        nearestAsks.push(0);  // Добавляем временный элемент в конец массива
+
+        for (i = len; i > 0 && limit < nearestAsks[i - 1]; i--) {
+            nearestAsks[i] = nearestAsks[i - 1];
+        }
+
+        nearestAsks[i] = limit;  // Вставляем новый элемент в нужное место
+
+        // Удаляем временный элемент
+        nearestAsks.pop();
+    }
+}
+
 
     //to make tradelist
     function getAddressOrdersNum(address address_) public view returns(uint ordersNum){
