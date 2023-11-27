@@ -30,7 +30,7 @@ contract orderbase is GetPrice{
     mapping(uint => uint) bidFilled;
     
     uint[] public nearestAsks = [100000,100000];
-    uint[] public nearestBids;
+    uint[] public nearestBids = [0, 0];
 
     function createAskOB(uint limit) public {
     uint i;
