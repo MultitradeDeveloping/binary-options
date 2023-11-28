@@ -23,6 +23,7 @@ function limitbid(uint coef) public payable{
         highestBid = coef;
     }    
     
+    createBidOB(coef);
 }
 
 function limitask(uint coef) public payable{
@@ -41,6 +42,7 @@ function limitask(uint coef) public payable{
     if(lowestAsk > coef){
         lowestAsk = coef;
     }   
+    createAskOB(coef);
     
 }
 
