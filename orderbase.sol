@@ -32,8 +32,8 @@ contract orderbase is GetPrice{
     uint[] public nearestAsks = [100000];
     uint[] public nearestBids= [100000]; 
 
-    uint NAlen;
-    uint NBlen;
+    uint public NAlen;
+    uint public NBlen;
 
     function createAskOB(uint limit) public {
     uint i;
