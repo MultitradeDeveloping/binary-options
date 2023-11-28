@@ -32,7 +32,8 @@ contract orderbase is GetPrice{
     uint[] public nearestAsks = [100000];
     uint[] public nearestBids= [100000]; 
 
-
+    uint NAlen;
+    uint NBlen;
 
     function createAskOB(uint limit) public {
     uint i;
@@ -63,6 +64,7 @@ contract orderbase is GetPrice{
         // Удаляем временный элемент
         nearestAsks.pop();
     }
+    NAlen++;
 }
 
     
@@ -95,6 +97,7 @@ contract orderbase is GetPrice{
         // Удаляем временный элемент
         nearestBids.pop();
     }
+    NBlen++;
 }
 
 
