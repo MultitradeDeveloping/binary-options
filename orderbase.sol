@@ -1,157 +1,247 @@
 // import "./strings.sol";
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+import  "./getprice.sol"; 
 
-import "./orderbase.sol"; 
-
-contract orderSystem is orderbase{
-
-function limitbid(uint coef) public payable{
-    id = id+1;
-    idBaseReversed[msg.sender].push(id);
-    uint volume = msg.value ;
-    if(volume  == 0){volume = n;}
-    // uint t = block.timestamp;
-    // uint treq = t%period;
-    // require(treq>60);
-    oibids = oibids + (msg.value*coef/1000);
-    idBase[id] = msg.sender;
-    bidCoefs[id] = coef;
-    bidValue[id] = msg.value;
-    // xx = askMain[n][coef][id];
-    if(highestBid < coef){
-        highestBid = coef;
-    }    
+contract orderbase is GetPrice{
+    //due to the lack of numbers with a dot, all coefficients are stored multiplied by 1000
     
-    createBidOB(coef);
-}
+    uint public highestBid;
+    uint public lowestAsk = 10**9;
+    uint public id;
+    uint public oibids;
+    uint public oiasks;
+    uint period = 60;
 
-function limitask(uint coef) public payable{
-    id = id+1;
-    idBaseReversed[msg.sender].push(id);
-    uint volume = msg.value ;
-    if(volume  == 0){volume = n;}
-    // uint t = block.timestamp;
-    // uint treq = t%period;
-    // require(treq>60);
-    oiasks = oiasks + (msg.value*coef/1000);
-    idBase[id] = msg.sender;
-    askCoefs[id] = coef;
-    askValue[id] = msg.value;
-    // xx = askMain[n][coef][id];
-    if(lowestAsk > coef){
-        lowestAsk = coef;
-    }   
-    createAskOB(coef);
+    //id to address
+    mapping(uint => address) idBase;
+    mapping(address => uint[]) idBaseReversed;
+
+    //id => coef
+    mapping(uint => uint) askCoefs;
+    mapping(uint => uint) bidCoefs;
+
+    //id => value
+    mapping(uint => uint) askValue;
+    mapping(uint => uint) bidValue;
+
+    //id => value filled
+    mapping(uint => uint) askFilled;
+    mapping(uint => uint) bidFilled;
     
-}
+    uint[] public nearestAsks = [100000];
+    uint[] public nearestBids= [100000]; 
 
-function marketbid() public payable{
-    require(msg.value<=oiasks, "Your order is more than supply in orderbook. Be careful to avoid squeeze");
-    oiasks = oiasks - msg.value;
-    id = id+1;
-    idBaseReversed[msg.sender].push(id);
-    idBase[id] = msg.sender; 
-    uint await;
-    uint f = 0;
-    uint locCoef;
-    bidValue[id] = msg.value;
-    while(f<msg.value){
-        renewLowestAsk(1);
-        uint a;
-        while(locCoef != lowestAsk){
-            locCoef = askCoefs[a+1];
-            a++;
-        }
+
+
+    function createAskOB(uint limit) public {
+    uint i;
+    uint len = nearestAsks.length;
+
+    if (limit < askCoefs[nearestAsks[len-1]]) {
         
-        // if(locCoef == 0){locCoef = 1000;}
-        //coef for ask
-        uint fullvalue = (msg.value-f)*locCoef/1000;
+        while (i != len) {
+            if (limit <= askCoefs[nearestAsks[i]]) {
+                nearestAsks.push(0);
+                for (uint j = nearestAsks.length - 1; j > i; j--) {
+                    nearestAsks[j] = nearestAsks[j - 1];
+                }
+                nearestAsks[i] = id;
+                break;
+            }
+            i = i + 1;
+        }
+    } else {
+        nearestAsks.push(0);  // Добавляем временный элемент в конец массива
 
-        //не разъедает
-        if(askValue[a]-askFilled[a] > (msg.value - f)/locCoef*1000){
-            bidFilled[id] = msg.value;
-            askFilled[a] = askFilled[a] + fullvalue;
-            // await = await + (msg.value - f)/locCoef*1000;
-            await = await + fullvalue;
-            f = msg.value;
+        for (i = len; i > 0 && limit < nearestAsks[i - 1]; i--) {
+            nearestAsks[i] = nearestAsks[i - 1];
+        }
+
+        nearestAsks[i] = id;  // Вставляем новый элемент в нужное место
+
+        // Удаляем временный элемент
+        nearestAsks.pop();
+    }
+}
+
+    
+    function createBidOB(uint limit) public {
+    uint i;
+    uint len = nearestBids.length;
+
+    if (limit < bidCoefs[nearestBids[len-1]]) {
+        
+        while (i != len) {
+            if (limit <= bidCoefs[nearestBids[i]]) {
+                nearestBids.push(0);
+                for (uint j = nearestBids.length - 1; j > i; j--) {
+                    nearestBids[j] = nearestBids[j - 1];
+                }
+                nearestBids[i] = id;
+                break;
+            }
+            i = i + 1;
+        }
+    } else {
+        nearestBids.push(0);  // Добавляем временный элемент в конец массива
+
+        for (i = len; i > 0 && limit < nearestBids[i - 1]; i--) {
+            nearestBids[i] = nearestBids[i - 1];
+        }
+
+        nearestBids[i] = id;  // Вставляем новый элемент в нужное место
+
+        // Удаляем временный элемент
+        nearestBids.pop();
+    }
+}
+
+
+    //to make tradelist
+    function getAddressOrdersNum(address address_) public view returns(uint ordersNum){
+        uint a = idBaseReversed[address_].length;
+        return(a);
+    }
+
+    function getIdsOfOrders(address address_, uint n) public view returns(uint idNum){
+        uint a = idBaseReversed[address_][n];
+        return(a);
+    }
+
+
+    //side LONG = 1, SHORT = 0
+    function getDataByID(uint n) public view returns(uint coef, uint side, uint value, uint filled){
+        uint valbids = bidValue[n];
+        uint valasks = askValue[n];    
+        if(valbids != 0){
+            return(bidCoefs[n], 1, valbids, bidFilled[n]);
+        }
+        else{
+            return(askCoefs[n], 0, valasks, askFilled[n]);
+        }
+
+    }
+
+    function calculateAverageAskCoef(uint volume) public view returns(uint){
+        if(volume > oiasks){return(0);}
+        else{
+            //spent by market order
+            uint spend;
+            uint fill;
+            uint highestUsedCoef;
+            while(spend < volume){
+                uint i;
+                uint localId;
+                uint LocalCoef = 65535;
+                while(i<=id){
+                    i++;
+                    if(askCoefs[i] <= LocalCoef && askCoefs[i] > highestUsedCoef && askFilled[i]-askValue[i] != 0){
+                        LocalCoef = askCoefs[i];
+                        highestUsedCoef = LocalCoef;
+                        localId = i;
+                       }
+
+                }
+                
+                uint add = askValue[i]; 
+                if(add <= volume-spend){ 
+                    fill = fill+add;
+                    spend = spend + (add*LocalCoef/1000);
+                }
+                else{
+                    fill = fill + (volume - spend)*1000/LocalCoef;
+                    spend = volume;
+                }
+                
+            }   
+            return((1000*fill)/spend);
+        }
+            
+
+    }
+
+    function calculateAverageBidCoef(uint volume) public view returns(uint){
+        if(volume > oibids){return(0);}
+        else{
+            //spent by market order
+            uint spend;
+            uint fill;
+            uint lowestUsedCoef;
+            while(spend < volume){
+                uint i;
+                uint localId;
+                uint LocalCoef;
+                while(i<=id){
+                    i++;
+                    if(bidCoefs[i] >= LocalCoef && bidCoefs[i] > lowestUsedCoef && bidFilled[i] - bidValue[i] != 0){
+                        LocalCoef = bidCoefs[i];
+                        lowestUsedCoef = LocalCoef;
+                        localId = i;
+                       }
+
+                }
+                
+                uint add = bidValue[i]; 
+                if(add <= volume-spend){ 
+                    fill = fill+add;
+                    spend = spend + (add*LocalCoef/1000);
+                }
+                else{
+                    fill = fill + (volume - spend)*1000/LocalCoef;
+                    spend = volume;
+                }
+                
+            }
+            return((1000*fill)/spend);
+        }
+            
+
+    }
+
+
+
+    function renewHighestBids(uint volume) internal{
+        uint i = 0;
+        uint cf; 
+        if(volume == 0){volume = n;}
+        while(i != id){
+            i = i+1;
+            uint loc = bidCoefs[i];
+            if(bidValue[i] != 0){
+                if(cf == 0){
+                    cf = loc;
+                }
+                if(loc>cf){
+                    cf = loc;
+                }
+            }
+            if(i>=id){break;}
+        }
+        highestBid = cf;
+    }
+    
+
+    function renewLowestAsk(uint volume) internal{
+        uint i = 0;
+        uint cf;
+        if(volume == 0){volume = n;} 
+        while(i != id){
+            i = i+1;
+            uint loc = askCoefs[i];
+            if(askValue[i] != 0){
+                if(cf == 0){
+                    cf = loc;
+                }
+                if(loc<cf){
+                    cf = loc;
+                }
             }
 
-        //разъедает
-        else{
-            askFilled[a] = askValue[a];
-            bidFilled[id]  = bidFilled[id] + (msg.value - f)/locCoef*1000;
-            // await = await + (msg.value - f)/locCoef*1000;
-            await = await + fullvalue;
-            f = f + fullvalue + (msg.value - f)/locCoef*1000;
+            if(i>=id){break;}
         }
-
-
-    }
-    bidCoefs[id] = 1000*(await/msg.value);
-    
-}
-
-function marketask() public payable{
-    require(msg.value<=oibids, "Your order is more than supply in orderbook. Be careful to avoid squeeze");
-    oibids = oibids - msg.value;
-    id = id+1;
-    idBaseReversed[msg.sender].push(id);
-    idBase[id] = msg.sender; 
-    uint await;
-    uint f = 0;
-    uint locCoef;
-    askValue[id] = msg.value;
-    while(f<msg.value){
-        renewHighestBids(1);
-        uint a;
-        while(locCoef != highestBid){
-            locCoef = bidCoefs[a+1];
-            a++;
-        }
-        
-        // if(locCoef == 0){locCoef = 1000;}
-        //coef for ask
-        uint fullvalue = (msg.value-f)*locCoef/1000;
-
-        //не разъедает
-        if(bidValue[a]-bidFilled[a] > (msg.value - f)/locCoef*1000){
-            askFilled[id] = msg.value;
-            bidFilled[a] = bidFilled[a] + fullvalue;
-            // await = await + (msg.value - f)/locCoef*1000;
-            await = await + fullvalue;
-            f = msg.value;
-            }
-
-        //разъедает
-        else{
-            bidFilled[a] = bidValue[a];
-            askFilled[id]  = askFilled[id] + (msg.value - f)/locCoef*1000;
-            // await = await + (msg.value - f)/locCoef*1000;
-            await = await + fullvalue;
-            f = f + fullvalue + (msg.value - f)/locCoef*1000;
-        }
-
-
-    }
-    askCoefs[id] = 1000*(await/msg.value);
-    
-}
-	
-
-
-
-
-
-function cancelBid(uint id, uint volume) public {
-    require(bidValue[id] >= volume);
-    bidValue[id] = bidValue[id] - volume;
+        lowestAsk = cf;
     }
 
 
-
-function cancelask(uint id,  uint volume) public {
-    require(askValue[id] >= volume);
-    askValue[id] = askValue[id] - volume;
-}
 }
