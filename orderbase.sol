@@ -29,76 +29,80 @@ contract orderbase is GetPrice{
     mapping(uint => uint) askFilled;
     mapping(uint => uint) bidFilled;
     
-    uint[] public nearestAsks = [100000];
-    uint[] public nearestBids= [100000]; 
+    mapping(uint => uint) nearestAsks;
+mapping(uint => uint) nearestBids;
 
-    uint public NAlen;
-    uint public NBlen;
+uint public NAlen;
+uint public NBlen;
 
-    function createAskOB(uint limit) public {
+
+function getNA(uint i) public view returns(uint){
+    return(nearestAsks[i]);
+}
+
+function getNB(uint i) public view returns(uint){
+    return(nearestBids[i]);
+}
+
+
+function createAskOB(uint limit) public {
     uint i;
-    uint len = nearestAsks.length;
+    uint len = NAlen;
 
-    if (limit < askCoefs[nearestAsks[len-1]]) {
+    if (len > 0 && limit < askCoefs[nearestAsks[len-1]]) {
         
         while (i != len) {
             if (limit <= askCoefs[nearestAsks[i]]) {
-                nearestAsks.push(0);
-                for (uint j = nearestAsks.length - 1; j > i; j--) {
+                uint temp = nearestAsks[len-1];
+                for (uint j = len - 1; j > i; j--) {
                     nearestAsks[j] = nearestAsks[j - 1];
                 }
                 nearestAsks[i] = id;
+                nearestAsks[len] = temp;
                 break;
             }
             i = i + 1;
         }
     } else {
-        nearestAsks.push(0);  // Добавляем временный элемент в конец массива
-
+        uint temp = nearestAsks[len];
         for (i = len; i > 0 && limit < nearestAsks[i - 1]; i--) {
             nearestAsks[i] = nearestAsks[i - 1];
         }
-
-        nearestAsks[i] = id;  // Вставляем новый элемент в нужное место
-
-        // Удаляем временный элемент
-        nearestAsks.pop();
+        nearestAsks[i] = id;
+        nearestAsks[len+1] = temp;
     }
     NAlen++;
 }
 
-    
-    function createBidOB(uint limit) public {
+function createBidOB(uint limit) public {
     uint i;
-    uint len = nearestBids.length;
+    uint len = NBlen;
 
-    if (limit < bidCoefs[nearestBids[len-1]]) {
+    if (len > 0 && limit < bidCoefs[nearestBids[len-1]]) {
         
         while (i != len) {
             if (limit <= bidCoefs[nearestBids[i]]) {
-                nearestBids.push(0);
-                for (uint j = nearestBids.length - 1; j > i; j--) {
+                uint temp = nearestBids[len-1];
+                for (uint j = len - 1; j > i; j--) {
                     nearestBids[j] = nearestBids[j - 1];
                 }
                 nearestBids[i] = id;
+                nearestBids[len] = temp;
                 break;
             }
             i = i + 1;
         }
     } else {
-        nearestBids.push(0);  // Добавляем временный элемент в конец массива
-
+        uint temp = nearestBids[len];
         for (i = len; i > 0 && limit < nearestBids[i - 1]; i--) {
             nearestBids[i] = nearestBids[i - 1];
         }
-
-        nearestBids[i] = id;  // Вставляем новый элемент в нужное место
-
-        // Удаляем временный элемент
-        nearestBids.pop();
+        nearestBids[i] = id;
+        nearestBids[len+1] = temp;
     }
     NBlen++;
 }
+
 
 
     //to make tradelist
