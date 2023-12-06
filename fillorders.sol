@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "./orderbase.sol"; 
+import "./interaction.sol"; 
 
 contract orderSystem is orderbase{
 
@@ -22,7 +23,8 @@ function limitbid(uint coef) public payable{
     if(highestBid < coef){
         highestBid = coef;
     }    
-    
+    uint feerate = vip();
+    fees[id] = feerate;
     createBidOB(coef);
 }
 
@@ -42,6 +44,8 @@ function limitask(uint coef) public payable{
     if(lowestAsk > coef){
         lowestAsk = coef;
     }   
+    uint feerate = vip();
+    fees[id] = feerate;
     createAskOB(coef);
     
 }
@@ -89,7 +93,8 @@ function marketbid() public payable{
 
     }
     bidCoefs[id] = 1000*(await/msg.value);
-    
+    uint feerate = vip();
+    fees[id] = feerate;
 }
 
 function marketask() public payable{
@@ -135,7 +140,8 @@ function marketask() public payable{
 
     }
     askCoefs[id] = 1000*(await/msg.value);
-    
+    uint feerate = vip();
+    fees[id] = feerate;
 }
 	
 
