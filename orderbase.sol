@@ -28,7 +28,11 @@ contract orderbase is GetPrice{
     //id => value filled
     mapping(uint => uint) askFilled;
     mapping(uint => uint) bidFilled;
-    
+
+    //id => fee (0.1% * X)
+    mapping(uint => uint) fees;
+
+
     mapping(uint => uint) nearestAsks;
 mapping(uint => uint) nearestBids;
 
