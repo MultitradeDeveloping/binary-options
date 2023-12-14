@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import "./orderbase.sol"; 
 import "./interaction.sol"; 
 
-contract orderSystem is orderbase{
+contract orderSystem is orderbase, TokenContract{
 
 function limitbid(uint coef) public payable{
     id = id+1;
