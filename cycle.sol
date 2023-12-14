@@ -5,9 +5,6 @@ pragma solidity ^0.8.0;
 
 
 contract cycle is takeprofit{   
-    address public owner = msg.sender;
-
-
     function clean() internal  {
     uint a ;
     uint b;
