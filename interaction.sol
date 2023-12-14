@@ -66,7 +66,7 @@ contract TokenContract {
         else{withdrawMT(value, msg.sender);}
     }
 
-    function vip() public view returns(uint, uint){
+    function vip() public view returns(uint){
         IBEP20 tokenContract = IBEP20(tokenContractAddress);
         uint bal = tokenContract.balanceOf(msg.sender);
         uint myvip;
@@ -77,7 +77,7 @@ contract TokenContract {
             else{break;}
         }
 
-        return(bal, vips_fee[myvip]);
+        return(vips_fee[myvip]);
     }
 }
 
