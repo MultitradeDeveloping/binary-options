@@ -31,7 +31,7 @@ contract cycle is takeprofit{
         bidCoefs[a] = 0;
         // test++;
     }
-    highestBid = 0;
+    lowestBid = 0;
     lowestAsk = 0;
     oibids = 0;
     oiasks = 0;
