@@ -6,7 +6,7 @@ import  "./getprice.sol";
 contract orderbase is GetPrice{
     //due to the lack of numbers with a dot, all coefficients are stored multiplied by 1000
     
-    uint public highestBid;
+    uint public lowestBid = 10**9;
     uint public lowestAsk = 10**9;
     uint public id;
     uint public oibids;
@@ -212,10 +212,10 @@ function createBidOB(uint limit) public {
 
 
 
-    function renewHighestBids(uint volume) internal{
+    function renewLowestBids(uint volume) internal{
         uint i = 0;
-        uint cf; 
-        if(volume == 0){volume = n;}
+        uint cf;
+        if(volume == 0){volume = n;} 
         while(i != id){
             i = i+1;
             uint loc = bidCoefs[i];
@@ -223,13 +223,14 @@ function createBidOB(uint limit) public {
                 if(cf == 0){
                     cf = loc;
                 }
-                if(loc>cf){
+                if(loc<cf){
                     cf = loc;
                 }
             }
+
             if(i>=id){break;}
         }
-        highestBid = cf;
+        lowestBid = cf;
     }
     
 
