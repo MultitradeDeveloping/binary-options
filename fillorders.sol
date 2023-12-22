@@ -3,28 +3,28 @@
 pragma solidity ^0.8.0;
 
 import "./orderbase.sol"; 
-import "./interaction.sol"; 
+// import "./interaction.sol"; 
 
-contract orderSystem is orderbase, TokenContract{
+contract orderSystem is orderbase{
 
 function limitbid(uint coef) public payable{
     id = id+1;
     idBaseReversed[msg.sender].push(id);
-    uint volume = msg.value ;
+    uint volume = msg.value;
     if(volume  == 0){volume = n;}
     // uint t = block.timestamp;
     // uint treq = t%period;
     // require(treq>60);
     oibids = oibids + (msg.value*coef/1000);
     idBase[id] = msg.sender;
-    bidCoefs[id] = coef;
-    bidValue[id] = msg.value;
+    askCoefs[id] = coef;
+    askValue[id] = msg.value;
     // xx = askMain[n][coef][id];
-    if(highestBid < coef){
-        highestBid = coef;
-    }    
-    uint feerate = vip();
-    fees[id] = feerate;
+    if(lowestBid > coef){
+        lowestBid = coef;
+    }   
+    // uint feerate = vip();
+    // fees[id] = feerate;
     createBidOB(coef);
 }
 
@@ -44,8 +44,8 @@ function limitask(uint coef) public payable{
     if(lowestAsk > coef){
         lowestAsk = coef;
     }   
-    uint feerate = vip();
-    fees[id] = feerate;
+    // uint feerate = vip();
+    // fees[id] = feerate;
     createAskOB(coef);
     
 }
@@ -93,12 +93,12 @@ function marketbid() public payable{
 
     }
     bidCoefs[id] = 1000*(await/msg.value);
-    uint feerate = vip();
-    fees[id] = feerate;
+    // uint feerate = vip();
+    // fees[id] = feerate;
 }
 
 function marketask() public payable{
-    require(msg.value<=oibids, "Your order is more than supply in orderbook. Be careful to avoid squeeze");
+     require(msg.value<=oibids, "Your order is more than supply in orderbook. Be careful to avoid squeeze");
     oibids = oibids - msg.value;
     id = id+1;
     idBaseReversed[msg.sender].push(id);
@@ -108,9 +108,9 @@ function marketask() public payable{
     uint locCoef;
     askValue[id] = msg.value;
     while(f<msg.value){
-        renewHighestBids(1);
+        renewLowestBids(1);
         uint a;
-        while(locCoef != highestBid){
+        while(locCoef != lowestBid){
             locCoef = bidCoefs[a+1];
             a++;
         }
@@ -140,8 +140,8 @@ function marketask() public payable{
 
     }
     askCoefs[id] = 1000*(await/msg.value);
-    uint feerate = vip();
-    fees[id] = feerate;
+    // uint feerate = vip();
+    // fees[id] = feerate;
 }
 	
 
