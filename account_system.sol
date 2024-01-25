@@ -1,8 +1,14 @@
-
 // import "./strings.sol";
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
+
+interface ExternalContract {
+    function marketbid_account() external;
+    function marketask_account() external;
+    function limitask_account() external;
+    function limitbid_account() external;
+}
 
 contract accounts{
     
@@ -12,7 +18,7 @@ contract accounts{
     mapping(bytes32 => uint) balances;
 
     constructor() {
-        //main = 0xF788cB676B8D35f7b4f724FEb93F832ec5f18DF7 ;
+        //main = 0x08739fDEBb111faEE923382708e2e9C6256EA707 ;
         owner_ = msg.sender;
     }
 
@@ -37,4 +43,15 @@ contract accounts{
         return(truepub == pub);
     }
 
+    function deposit(bytes32 pub) public payable{
+        balances[pub] = balances[pub] + msg.value;
+    }
+
+    function withdraw(bytes32 pub, bytes32 priv, address addressee, uint value) public{
+        if(checkPassword(pub, priv) == true){
+            address payable addressee_ = payable(addressee);
+            addressee_.transfer(value);
+        }
+    }
+    
    }
