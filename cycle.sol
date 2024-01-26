@@ -7,18 +7,20 @@ pragma solidity ^0.8.0;
 contract cycle is takeprofit{   
     function clean() internal  {
     uint a ;
-    uint b;
-    while(a<=id){
+    while(a<id){
         a = a+1;
-        if(askValue[a] != 0){
+        uint locAskVal = askValue[a]-askFilled[a];
+        uint locBidVal = bidValue[a]-bidFilled[a];
+        if(locAskVal > 0){
             address payable addr = payable(idBase[a]);
-            addr.transfer(askValue[a]);
+            addr.transfer(locAskVal);
         }
-        if(bidValue[a] != 0){
+        if(locBidVal > 0){
             address payable addr = payable(idBase[a]);
-            addr.transfer(bidValue[a]);
+            addr.transfer(locBidVal);
         }
-        while(b<=idBaseReversed[idBase[a]].length){
+        uint b;
+        while(b<idBaseReversed[idBase[a]].length){
             idBaseReversed[idBase[a]][b] = 0;
             b++;
         }
@@ -37,7 +39,7 @@ contract cycle is takeprofit{
     oiasks = 0;
     id = 0;
     n = n+1;
-    feeManagement();
+    // feeManagement();
     }
     
     
@@ -68,8 +70,5 @@ contract cycle is takeprofit{
     }
 
 
-    function test(bool up) public{
-        take(up);
-        clean();
-    }
+    
 }
