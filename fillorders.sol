@@ -3,9 +3,9 @@
 pragma solidity ^0.8.0;
 
 import "./orderbase.sol"; 
-// import "./interaction.sol"; 
+import "./interaction.sol"; 
 
-contract orderSystem is orderbase{
+contract orderSystem is orderbase, TokenContract{
 
 function limitbid(uint coef) public payable{
     id = id+1;
@@ -17,8 +17,8 @@ function limitbid(uint coef) public payable{
     // require(treq>60);
     oibids = oibids + (msg.value*coef/1000);
     idBase[id] = msg.sender;
-    askCoefs[id] = coef;
-    askValue[id] = msg.value;
+    bidCoefs[id] = coef;
+    bidValue[id] = msg.value;
     // xx = askMain[n][coef][id];
     if(lowestBid > coef){
         lowestBid = coef;
@@ -70,7 +70,7 @@ function marketbid() public payable{
         
         // if(locCoef == 0){locCoef = 1000;}
         //coef for ask
-        uint fullvalue = (msg.value-f)*locCoef/1000;
+        uint fullvalue = (msg.value-f)/locCoef*1000;
 
         //не разъедает
         if(askValue[a]-askFilled[a] > (msg.value - f)/locCoef*1000){
@@ -117,7 +117,7 @@ function marketask() public payable{
         
         // if(locCoef == 0){locCoef = 1000;}
         //coef for ask
-        uint fullvalue = (msg.value-f)*locCoef/1000;
+        uint fullvalue = (msg.value-f)/locCoef*1000;
 
         //не разъедает
         if(bidValue[a]-bidFilled[a] > (msg.value - f)/locCoef*1000){
