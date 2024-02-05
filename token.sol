@@ -351,7 +351,7 @@ contract BEP20Token is Context, IBEP20, Ownable {
 
   constructor() {
     _name = "Multitrade Token";
-    _symbol = "MT";
+    _symbol = "MTT";
     _decimals = 18;
     _totalSupply = 5*10**6*10**18; 
     _balances[msg.sender] = _totalSupply;
